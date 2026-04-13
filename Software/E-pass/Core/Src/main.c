@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "i2c.h"
 #include "sdio.h"
 #include "spi.h"
 #include "usb_otg.h"
@@ -26,6 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "display_spi.h"
+#include "button_logic.h"
 
 /* USER CODE END Includes */
 
@@ -36,6 +37,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BUTTON_ID_PREV 1U
+#define BUTTON_ID_NEXT 2U
+#define DEMO_COLOR_COUNT 5U
 
 /* USER CODE END PD */
 
@@ -47,12 +51,25 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+static DisplaySPI_Handle_t gDisplay;
+static ButtonLogic_Handle_t gButtons;
+static uint8_t gColorIndex = 0U;
+static uint8_t gLedOn = 0U;
+
+static const uint16_t gDemoColors[DEMO_COLOR_COUNT] = {
+  0xF800U, /* Red */
+  0x07E0U, /* Green */
+  0x001FU, /* Blue */
+  0xFFE0U, /* Yellow */
+  0xFFFFU  /* White */
+};
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+static void App_HandleButtonEvent(const ButtonEvent_t *evt);
 
 /* USER CODE END PFP */
 
@@ -90,11 +107,59 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C2_Init();
   MX_SDIO_SD_Init();
   MX_SPI1_Init();
   MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
+  {
+    DisplaySPI_Config_t displayCfg;
+    ButtonConfig_t buttonCfg[2];
+
+    displayCfg.hspi = &hspi1;
+    displayCfg.csPort = SPI1_CS_GPIO_Port;
+    displayCfg.csPin = SPI1_CS_Pin;
+    displayCfg.dcPort = SPI1_DC_GPIO_Port;
+    displayCfg.dcPin = SPI1_DC_Pin;
+    displayCfg.rstPort = SPI1_RST_GPIO_Port;
+    displayCfg.rstPin = SPI1_RST_Pin;
+    displayCfg.blPort = NULL;
+    displayCfg.blPin = 0U;
+    displayCfg.activeBacklightState = GPIO_PIN_SET;
+
+    if (DisplaySPI_Init(&gDisplay, &displayCfg) != DISPLAY_SPI_OK)
+    {
+      Error_Handler();
+    }
+
+    if (DisplaySPI_InitPanel(&gDisplay) != DISPLAY_SPI_OK)
+    {
+      Error_Handler();
+    }
+
+    if (DisplaySPI_FillScreenRGB565(&gDisplay, gDemoColors[gColorIndex]) != DISPLAY_SPI_OK)
+    {
+      Error_Handler();
+    }
+
+    buttonCfg[0].id = BUTTON_ID_PREV;
+    buttonCfg[0].port = Button_1_GPIO_Port;
+    buttonCfg[0].pin = Button_1_Pin;
+    buttonCfg[0].activeState = GPIO_PIN_RESET;
+    buttonCfg[0].debounceMs = 25U;
+    buttonCfg[0].longPressMs = 800U;
+
+    buttonCfg[1].id = BUTTON_ID_NEXT;
+    buttonCfg[1].port = Button_2_GPIO_Port;
+    buttonCfg[1].pin = Button_2_Pin;
+    buttonCfg[1].activeState = GPIO_PIN_RESET;
+    buttonCfg[1].debounceMs = 25U;
+    buttonCfg[1].longPressMs = 800U;
+
+    if (ButtonLogic_Init(&gButtons, buttonCfg, 2U) != HAL_OK)
+    {
+      Error_Handler();
+    }
+  }
 
   /* USER CODE END 2 */
 
@@ -105,6 +170,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    ButtonEvent_t evt;
+
+    ButtonLogic_Process(&gButtons, HAL_GetTick());
+    while (ButtonLogic_GetEvent(&gButtons, &evt))
+    {
+      App_HandleButtonEvent(&evt);
+    }
   }
   /* USER CODE END 3 */
 }
@@ -155,6 +227,39 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void App_HandleButtonEvent(const ButtonEvent_t *evt)
+{
+  if (evt == NULL)
+  {
+    return;
+  }
+
+  if (evt->type == BUTTON_EVENT_CLICK)
+  {
+    if (evt->buttonId == BUTTON_ID_PREV)
+    {
+      if (gColorIndex == 0U)
+      {
+        gColorIndex = DEMO_COLOR_COUNT - 1U;
+      }
+      else
+      {
+        gColorIndex--;
+      }
+      (void)DisplaySPI_FillScreenRGB565(&gDisplay, gDemoColors[gColorIndex]);
+    }
+    else if (evt->buttonId == BUTTON_ID_NEXT)
+    {
+      gColorIndex = (uint8_t)((gColorIndex + 1U) % DEMO_COLOR_COUNT);
+      (void)DisplaySPI_FillScreenRGB565(&gDisplay, gDemoColors[gColorIndex]);
+    }
+  }
+  else if (evt->type == BUTTON_EVENT_LONG_PRESS)
+  {
+    gLedOn = (uint8_t)!gLedOn;
+    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, gLedOn ? GPIO_PIN_SET : GPIO_PIN_RESET);
+  }
+}
 
 /* USER CODE END 4 */
 
