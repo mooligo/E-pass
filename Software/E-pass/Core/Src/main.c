@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 #include "sdio.h"
 #include "spi.h"
 #include "usb_device.h"
@@ -25,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "picture_transport.h"
 
 
 /* USER CODE END Includes */
@@ -97,7 +99,9 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
+  PictureTransport_Init();
 
   /* USER CODE END 2 */
 
@@ -108,6 +112,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    PictureTransport_Task();
 
   }
   /* USER CODE END 3 */

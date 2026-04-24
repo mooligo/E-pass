@@ -221,3 +221,28 @@ Current bring-up behavior:
 1. Display is initialized over SPI using ILI9341-compatible command sequence.
 2. Button 1 cycles previous color fill, Button 2 cycles next color fill.
 3. Long-press toggles status LED for quick input validation.
+
+## 12. USB CDC SD Transport (Current MVP)
+
+The firmware now includes a simple CDC command protocol for host-to-SD raw transfer.
+
+Supported commands over USB CDC:
+- `PING`
+	- Response: `PONG`
+- `HELP`
+	- Response: command summary
+- `SDINFO`
+	- Response: `SDINFO <log_block_count> <log_block_size>`
+- `WRITE <start_block> <block_count>`
+	- Response: `READY <block_count>`
+	- Host then sends exactly `block_count * 512` raw bytes.
+	- Final response on success: `OK WRITE`
+
+Error responses:
+- `ERR CMD` unknown command
+- `ERR ARGS` invalid command arguments
+- `ERR SDINFO` card info read failed
+- `ERR LINE` command line too long
+- `ERR FLOW` host pushed payload faster than firmware write queue
+- `ERR EXTRA` payload exceeded declared block count
+- `ERR WRITE` SD write failure

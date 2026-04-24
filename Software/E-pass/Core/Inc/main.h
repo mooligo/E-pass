@@ -71,6 +71,8 @@ void Error_Handler(void);
 #define Button_2_Pin GPIO_PIN_1
 #define Button_2_GPIO_Port GPIOB
 #define Button_2_EXTI_IRQn EXTI1_IRQn
+#define Detect_SDIO_Pin GPIO_PIN_6
+#define Detect_SDIO_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
