@@ -224,25 +224,36 @@ Current bring-up behavior:
 
 ## 12. USB CDC SD Transport (Current MVP)
 
-The firmware now includes a simple CDC command protocol for host-to-SD raw transfer.
+The firmware now uses a FatFS-based CDC upload protocol that writes image files into `0:/images`.
 
 Supported commands over USB CDC:
 - `PING`
 	- Response: `PONG`
 - `HELP`
 	- Response: command summary
-- `SDINFO`
-	- Response: `SDINFO <log_block_count> <log_block_size>`
-- `WRITE <start_block> <block_count>`
-	- Response: `READY <block_count>`
-	- Host then sends exactly `block_count * 512` raw bytes.
+- `MOUNT`
+	- Mounts SD filesystem if needed
+	- Response: `OK MOUNT` or `ERR MOUNT`
+- `START <name> <bytes>`
+	- Opens `0:/images/<name>` and prepares to receive `<bytes>` payload bytes
+	- Response: `READY <bytes>`
+	- Host then streams exactly `<bytes>` binary data bytes
 	- Final response on success: `OK WRITE`
+- `ABORT`
+	- Aborts active transfer and closes file handle
+	- Response: `OK ABORT`
+
+Filename constraints:
+- Allowed characters: letters, digits, `_`, `-`, `.`
+- Parent path traversal (`..`) is rejected
 
 Error responses:
 - `ERR CMD` unknown command
 - `ERR ARGS` invalid command arguments
-- `ERR SDINFO` card info read failed
+- `ERR MOUNT` mount failed
+- `ERR MKDIR` failed to create image directory
+- `ERR OPEN` failed to open output file
+- `ERR BUSY` transfer already active
 - `ERR LINE` command line too long
-- `ERR FLOW` host pushed payload faster than firmware write queue
-- `ERR EXTRA` payload exceeded declared block count
-- `ERR WRITE` SD write failure
+- `ERR WRITE` FatFS write failed
+- `ERR EXTRA` received more bytes than declared
