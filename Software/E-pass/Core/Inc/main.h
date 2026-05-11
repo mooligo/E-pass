@@ -71,6 +71,10 @@ void Error_Handler(void);
 #define Button_2_Pin GPIO_PIN_1
 #define Button_2_GPIO_Port GPIOB
 #define Button_2_EXTI_IRQn EXTI1_IRQn
+#define ST25_I2C_SCL_Pin GPIO_PIN_10
+#define ST25_I2C_SCL_GPIO_Port GPIOB
+#define ST25_I2C_SDA_Pin GPIO_PIN_3
+#define ST25_I2C_SDA_GPIO_Port GPIOB
 #define Detect_SDIO_Pin GPIO_PIN_6
 #define Detect_SDIO_GPIO_Port GPIOB
 

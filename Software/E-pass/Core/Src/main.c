@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "fatfs.h"
+#include "i2c.h"
 #include "sdio.h"
 #include "spi.h"
 #include "usb_device.h"
@@ -100,6 +101,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
   MX_FATFS_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   PictureTransport_Init();
 
