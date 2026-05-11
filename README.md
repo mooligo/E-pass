@@ -41,14 +41,17 @@ This table reflects the current CubeMX pin map in firmware and should be used as
 | USB FS DP | PA12 | USB_OTG_FS_DP | AF Bidir | USB data plus |
 | Button 1 (Prev) | PB0 | Button_1 | Input/EXTI | Pull-up + falling interrupt |
 | Button 2 (Next) | PB1 | Button_2 | Input/EXTI | Pull-up + falling interrupt |
+| ST25 I2C SDA | PB3 | ST25_I2C_SDA | AF Open-Drain | I2C2 SDA for ST25DV |
 | SPI1 MISO | PB4 | SPI1_MISO | AF Input | Optional for LCD, useful for shared SPI bus |
 | SDIO D3 | PB5 | SDIO_D3 | AF Bidir | SD 4-bit data |
+| SD Card Detect | PB6 | Detect_SDIO | Input | Active-low card detect input |
 | SDIO D0 | PB7 | SDIO_D0 | AF Bidir | SD 4-bit data |
+| ST25 I2C SCL | PB10 | ST25_I2C_SCL | AF Open-Drain | I2C2 SCL for ST25DV |
 | SDIO CLK | PB15 | SDIO_CK | AF Output | SD clock |
 
 Important schematic notes:
 1. LCD backlight control pin is not assigned in firmware yet. Reserve one GPIO for BL_EN or PWM dimming.
-2. NFC (ST25DV) and ESP32-C3 pins are not finalized in this firmware revision. Keep schematic placeholders for their buses and interrupts.
+2. ST25DV I2C pins are finalized in firmware; ESP32-C3 pins are still not finalized in this revision. Keep schematic placeholders for the ESP32 bus and interrupts.
 3. Buttons are active-low with pull-up and EXTI on falling edge.
 4. SPI1 currently has dedicated LCD control pins (CS/DC/RST) and can still be shared if bus arbitration is added later.
 
